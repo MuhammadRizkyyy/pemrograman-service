@@ -1,5 +1,3 @@
-// app.js - Entry point TokoBersama API
-
 const express = require("express");
 const { apiReference } = require("@scalar/express-api-reference");
 const path = require("path");
@@ -13,22 +11,20 @@ const orderRoutes = require("./routes/orderRoutes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Middleware: Parse JSON body
 app.use(express.json());
 
-// ── Bonus Middleware: Logging setiap request
+// Middleware Logging setiap request
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] ${req.method} ${req.path}`);
   next();
 });
 
-// ── Sajikan OpenAPI spec di /openapi.json
 app.get("/openapi.json", (req, res) => {
   res.sendFile(path.join(__dirname, "openapi.json"));
 });
 
-// ── Scalar API Docs di /docs
+// Scalar API Docs di /docs
 app.use(
   "/docs",
   apiReference({
@@ -37,13 +33,13 @@ app.use(
   }),
 );
 
-// ── Routes
+// Routes
 app.use("/kategori", kategoriRoutes);
 app.use("/seller", sellerRoutes);
 app.use("/produk", produkRoutes);
 app.use("/order", orderRoutes);
 
-// ── Bonus Endpoint: GET /statistik
+// GET /statistik
 app.get("/statistik", async (req, res) => {
   try {
     const [[{ total_produk }]] = await pool.query(
@@ -74,7 +70,7 @@ app.get("/statistik", async (req, res) => {
   }
 });
 
-// ── 404 handler untuk route yang tidak ditemukan
+// 404 handler untuk route yang tidak ditemukan
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -83,7 +79,7 @@ app.use((req, res) => {
   });
 });
 
-// ── Global error handler
+// Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res
@@ -91,11 +87,10 @@ app.use((err, req, res, next) => {
     .json({ success: false, message: "Internal Server Error", data: null });
 });
 
-// ── Start server
 app.listen(PORT, () => {
-  console.log(`✅  TokoBersama API berjalan di http://localhost:${PORT}`);
-  console.log(`📖  API Docs (Scalar) : http://localhost:${PORT}/docs`);
-  console.log(`📄  OpenAPI Spec      : http://localhost:${PORT}/openapi.json`);
+  console.log(`TokoBersama API berjalan di http://localhost:${PORT}`);
+  console.log(`API Docs (Scalar) : http://localhost:${PORT}/docs`);
+  console.log(`OpenAPI Spec      : http://localhost:${PORT}/openapi.json`);
 });
 
 module.exports = app;
