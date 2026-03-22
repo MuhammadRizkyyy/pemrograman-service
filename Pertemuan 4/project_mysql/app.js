@@ -7,6 +7,7 @@ const kategoriRoutes = require("./routes/kategoriRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
 const produkRoutes = require("./routes/produkRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const statistikRoutes = require("./routes/statistikRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,7 +25,7 @@ app.get("/openapi.json", (req, res) => {
   res.sendFile(path.join(__dirname, "openapi.json"));
 });
 
-// Scalar API Docs di /docs
+// Scalar API Docs
 app.use(
   "/docs",
   apiReference({
@@ -38,37 +39,7 @@ app.use("/kategori", kategoriRoutes);
 app.use("/seller", sellerRoutes);
 app.use("/produk", produkRoutes);
 app.use("/order", orderRoutes);
-
-// GET /statistik
-app.get("/statistik", async (req, res) => {
-  try {
-    const [[{ total_produk }]] = await pool.query(
-      "SELECT COUNT(*) AS total_produk FROM produk",
-    );
-    const [[{ total_seller }]] = await pool.query(
-      "SELECT COUNT(*) AS total_seller FROM seller",
-    );
-    const [[{ total_order }]] = await pool.query(
-      "SELECT COUNT(*) AS total_order FROM `order`",
-    );
-    const [[{ total_revenue }]] = await pool.query(
-      "SELECT COALESCE(SUM(total_harga), 0) AS total_revenue FROM `order` WHERE status = 'selesai'",
-    );
-
-    res.json({
-      success: true,
-      message: "Statistik TokoBersama",
-      data: {
-        total_produk,
-        total_seller,
-        total_order,
-        total_revenue: parseFloat(total_revenue),
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message, data: null });
-  }
-});
+app.use("/statistik", statistikRoutes);
 
 // 404 handler untuk route yang tidak ditemukan
 app.use((req, res) => {
