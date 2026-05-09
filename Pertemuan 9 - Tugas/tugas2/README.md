@@ -2,6 +2,9 @@
 
 Sistem backend untuk platform jual beli barang berbasis microservices.
 
+**Mahasiswa:** Muhammad Rizky — 2410511049  
+**Server:** `103.147.92.134` (LeAds) — port SSH: `8989`
+
 ## Arsitektur Sistem
 
 ```
@@ -9,47 +12,52 @@ Client
   │
   ▼
 ┌─────────────────────────────────────────┐
-│           API Gateway (:3000)           │
+│         API Gateway (:34900)            │
 │  - Routing ke semua service             │
 │  - Rate Limiting (100 req/15 menit)     │
 │  - Request Logging & Request ID         │
 └────┬──────────┬──────────┬──────────────┘
      │          │          │          │
      ▼          ▼          ▼          ▼
-┌─────────┐ ┌────────┐ ┌───────┐ ┌──────────────┐
-│  Auth   │ │Product │ │ Order │ │Notification  │
-│ Service │ │Service │ │Service│ │   Service    │
-│ (:3001) │ │(:3002) │ │(:3003)│ │   (:3004)    │
-└────┬────┘ └───┬────┘ └───┬───┘ └──────┬───────┘
-     │          │          │             │
-     └──────────┴────┬─────┘             │
-                     │                   │
-              ┌──────▼──────┐            │
-              │    MySQL    │            │
-              │  (4 DBs)    │            │
-              └─────────────┘            │
-                                         │
-              ┌──────────────────────────┘
-              │
-        ┌─────▼──────┐
-        │  RabbitMQ  │
-        │  (:5672)   │
-        │ (Publisher │
-        │  Consumer) │
-        └────────────┘
+┌──────────┐ ┌─────────┐ ┌────────┐ ┌──────────────┐
+│  Auth    │ │Product  │ │ Order  │ │Notification  │
+│ Service  │ │Service  │ │Service │ │   Service    │
+│ (:34901) │ │(:34902) │ │(:34903)│ │   (:34904)   │
+└────┬─────┘ └────┬────┘ └───┬────┘ └──────┬───────┘
+     │             │          │              │
+     └─────────────┴────┬─────┘              │
+                        │                    │
+               ┌────────▼──────┐             │
+               │     MySQL     │             │
+               │  (:34905)     │             │
+               │   (4 DBs)     │             │
+               └───────────────┘             │
+                                             │
+               ┌─────────────────────────────┘
+               │
+        ┌──────▼──────┐
+        │  RabbitMQ   │
+        │  (:34906)   │
+        │  UI(:34907) │
+        │  Publisher  │
+        │  Consumer   │
+        └─────────────┘
 ```
 
 ## Komponen Utama
 
-| Komponen | Service | Port | Deskripsi |
-|---|---|---|---|
-| API Gateway | api-gateway | 3000 | Entry point, routing, rate limiting |
-| Auth Service | auth-service | 3001 | Register, login, JWT, role management |
-| Product Service | product-service | 3002 | CRUD produk & kategori |
-| Order Service | order-service | 3003 | CRUD pesanan + publish RabbitMQ |
-| Notification Service | notification-service | 3004 | Consumer RabbitMQ, simpan notifikasi |
-| MySQL | - | 3306 | Database utama (4 database terpisah) |
-| RabbitMQ | - | 5672 / 15672 | Message broker |
+| Komponen | Service | Port (Host) | Port (Internal) | Deskripsi |
+|---|---|---|---|---|
+| API Gateway | api-gateway | **34900** | 3000 | Entry point, routing, rate limiting |
+| Auth Service | auth-service | **34901** | 3001 | Register, login, JWT, role management |
+| Product Service | product-service | **34902** | 3002 | CRUD produk & kategori |
+| Order Service | order-service | **34903** | 3003 | CRUD pesanan + publish RabbitMQ |
+| Notification Service | notification-service | **34904** | 3004 | Consumer RabbitMQ, simpan notifikasi |
+| MySQL | - | **34905** | 3306 | Database utama (4 database terpisah) |
+| RabbitMQ | - | **34906** | 5672 | Message broker |
+| RabbitMQ UI | - | **34907** | 15672 | Management dashboard |
+
+> Port menggunakan range **349xx** berdasarkan NIM 2410511049 agar tidak konflik dengan mahasiswa lain di server shared LeAds.
 
 ## Role Pengguna
 
@@ -64,17 +72,14 @@ Client
 ## Cara Menjalankan
 
 ### Prasyarat
-- Docker & Docker Compose
-- Node.js 20+ (untuk development lokal)
+- Docker & docker-compose
 
 ### 1. Clone & Setup Environment
 
 ```bash
-# Copy file environment
+git clone https://github.com/MuhammadRizkyyy/pemrograman-service.git
+cd "pemrograman-service/Pertemuan 9 - Tugas/tugas2"
 cp .env.example .env
-
-# Edit .env sesuai kebutuhan (terutama password)
-nano .env
 ```
 
 ### 2. Jalankan dengan Docker Compose
@@ -90,48 +95,22 @@ docker-compose ps
 docker-compose logs -f
 
 # Lihat log service tertentu
-docker-compose logs -f api-gateway
+docker-compose logs -f rizky_gateway
 ```
 
 ### 3. Verifikasi Service Berjalan
 
 ```bash
-curl http://localhost:3000/health
-```
-
-### Menjalankan Tanpa Docker (Development)
-
-```bash
-# Install dependencies semua service
-cd auth-service && npm install && cd ..
-cd product-service && npm install && cd ..
-cd order-service && npm install && cd ..
-cd notification-service && npm install && cd ..
-cd api-gateway && npm install && cd ..
-
-# Setup database MySQL
-mysql -u root -p < database/init.sql
-
-# Copy dan edit .env di setiap service
-cp auth-service/.env.example auth-service/.env
-cp product-service/.env.example product-service/.env
-cp order-service/.env.example order-service/.env
-cp notification-service/.env.example notification-service/.env
-cp api-gateway/.env.example api-gateway/.env
-
-# Jalankan setiap service (terminal terpisah)
-cd auth-service && npm start
-cd product-service && npm start
-cd order-service && npm start
-cd notification-service && npm start
-cd api-gateway && npm start
+curl http://localhost:34900/health
 ```
 
 ---
 
 ## Daftar Endpoint
 
-Semua request melalui API Gateway: `http://localhost:3000`
+Semua request melalui API Gateway:
+- **Lokal:** `http://localhost:34900`
+- **Server LeAds:** `http://103.147.92.134:34900`
 
 ### Auth Service `/api/auth`
 
@@ -193,7 +172,7 @@ Refresh access token.
 { "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
 ```
 
-#### GET /api/auth/me 
+#### GET /api/auth/me 🔒
 Lihat profil sendiri. Membutuhkan `Authorization: Bearer <token>`
 
 **Response (200):**
@@ -204,10 +183,10 @@ Lihat profil sendiri. Membutuhkan `Authorization: Bearer <token>`
 }
 ```
 
-#### GET /api/auth/users (admin)
+#### GET /api/auth/users 🔒 (admin)
 Lihat semua pengguna.
 
-#### PUT /api/auth/users/:id/deactivate (admin)
+#### PUT /api/auth/users/:id/deactivate 🔒 (admin)
 Nonaktifkan pengguna.
 
 ---
@@ -240,7 +219,7 @@ Lihat semua produk (publik). Query params: `page`, `limit`, `category_id`, `sear
 #### GET /api/products/:id
 Detail produk.
 
-#### POST /api/products (seller, admin)
+#### POST /api/products 🔒 (seller, admin)
 Tambah produk baru.
 
 **Request:**
@@ -255,10 +234,10 @@ Tambah produk baru.
 }
 ```
 
-#### PUT /api/products/:id (seller owner, admin)
+#### PUT /api/products/:id 🔒 (seller owner, admin)
 Update produk.
 
-#### DELETE /api/products/:id (seller owner, admin)
+#### DELETE /api/products/:id 🔒 (seller owner, admin)
 Hapus produk (soft delete).
 
 #### GET /api/products/seller/:sellerId
@@ -282,7 +261,7 @@ Lihat semua kategori (publik).
 }
 ```
 
-#### POST /api/categories (admin)
+#### POST /api/categories 🔒 (admin)
 Tambah kategori baru.
 
 **Request:**
@@ -290,14 +269,14 @@ Tambah kategori baru.
 { "name": "Otomotif", "description": "Produk otomotif" }
 ```
 
-#### DELETE /api/categories/:id (admin)
+#### DELETE /api/categories/:id 🔒 (admin)
 Hapus kategori.
 
 ---
 
 ### Order Service `/api/orders`
 
-#### POST /api/orders (buyer)
+#### POST /api/orders 🔒 (buyer)
 Buat pesanan baru. Otomatis mengurangi stok dan mengirim event ke RabbitMQ.
 
 **Request:**
@@ -337,14 +316,14 @@ Buat pesanan baru. Otomatis mengurangi stok dan mengirim event ke RabbitMQ.
 }
 ```
 
-#### GET /api/orders 
+#### GET /api/orders 🔒
 Lihat daftar pesanan. Buyer hanya melihat pesanan sendiri, admin melihat semua.
 Query params: `page`, `limit`, `status`
 
-#### GET /api/orders/:id 
+#### GET /api/orders/:id 🔒
 Detail pesanan.
 
-#### PUT /api/orders/:id/status 
+#### PUT /api/orders/:id/status 🔒
 Update status pesanan.
 - Buyer: hanya bisa `cancelled` untuk pesanan `pending` milik sendiri
 - Seller/Admin: bisa `confirmed`, `shipped`, `delivered`, `cancelled`
@@ -354,14 +333,14 @@ Update status pesanan.
 { "status": "confirmed" }
 ```
 
-#### DELETE /api/orders/:id (admin)
+#### DELETE /api/orders/:id 🔒 (admin)
 Hapus pesanan.
 
 ---
 
 ### Notification Service `/api/notifications`
 
-#### GET /api/notifications 
+#### GET /api/notifications 🔒
 Lihat notifikasi milik sendiri.
 Query params: `page`, `limit`, `is_read` (true/false)
 
@@ -383,19 +362,49 @@ Query params: `page`, `limit`, `is_read` (true/false)
 }
 ```
 
-#### GET /api/notifications/unread-count 
+#### GET /api/notifications/unread-count 🔒
 Jumlah notifikasi belum dibaca.
 
-#### PUT /api/notifications/:id/read
+#### PUT /api/notifications/:id/read 🔒
 Tandai notifikasi sebagai sudah dibaca.
 
-#### PUT /api/notifications/read-all
+#### PUT /api/notifications/read-all 🔒
 Tandai semua notifikasi sebagai sudah dibaca.
+
+---
+
+## Alur Message Broker (RabbitMQ)
+
+```
+Order Service                    RabbitMQ                  Notification Service
+     │                               │                              │
+     │  POST /orders (buyer)         │                              │
+     │──────────────────────────────►│                              │
+     │                               │                              │
+     │  publish: order.created       │                              │
+     │──────────────────────────────►│                              │
+     │                               │  consume: order.created      │
+     │                               │─────────────────────────────►│
+     │                               │                              │
+     │                               │  Simpan notifikasi ke DB     │
+     │                               │                              │
+     │  PUT /orders/:id/status       │                              │
+     │──────────────────────────────►│                              │
+     │                               │                              │
+     │  publish: order.status.xxx    │                              │
+     │──────────────────────────────►│                              │
+     │                               │  consume: order.status.*     │
+     │                               │─────────────────────────────►│
+     │                               │                              │
+     │                               │  Simpan notifikasi status    │
+```
+
+---
 
 ## Contoh Alur Penggunaan Lengkap
 
 ```bash
-BASE_URL="http://localhost:3000"
+BASE_URL="http://103.147.92.134:34900"
 
 # 1. Register sebagai seller
 curl -X POST $BASE_URL/api/auth/register \
@@ -431,7 +440,7 @@ curl -X POST $BASE_URL/api/orders \
   -H "Content-Type: application/json" \
   -d '{"items":[{"product_id":1,"quantity":2}],"shipping_address":"Jl. Merdeka No.1 Jakarta"}'
 
-# 7. Cek notifikasi (otomatis dibuat oleh notification-service)
+# 7. Cek notifikasi (otomatis dibuat oleh notification-service via RabbitMQ)
 curl $BASE_URL/api/notifications \
   -H "Authorization: Bearer $BUYER_TOKEN"
 ```
@@ -500,6 +509,9 @@ curl $BASE_URL/api/notifications \
 ├── database/
 │   └── init.sql                 # Inisialisasi semua database
 │
+├── postman/
+│   └── Marketplace_API.postman_collection.json
+│
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
@@ -517,6 +529,6 @@ Setelah inisialisasi database, tersedia akun admin:
 
 ## RabbitMQ Management UI
 
-Akses di: `http://localhost:15672`
+Akses di: `http://103.147.92.134:34907`
 - Username: `guest`
 - Password: `guest`
