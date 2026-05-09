@@ -1,14 +1,14 @@
 {
   "info": {
-    "_postman_id": "marketplace-api-collection-v1",
+    "_postman_id": "marketplace-api-collection-v2",
     "name": "Marketplace API",
-    "description": "Postman collection for Marketplace Backend API - covers Auth, Products, Categories, Orders, Notifications, and Health Checks.",
+    "description": "Postman collection for Marketplace Backend API - Muhammad Rizky 2410511049\nBase URL: http://103.147.92.134:34900",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3000",
+      "value": "http://103.147.92.134:34900",
       "type": "string"
     },
     {
@@ -34,6 +34,79 @@
   ],
   "item": [
     {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://103.147.92.134:34901/health",
+              "protocol": "http",
+              "host": ["103.147.92.134"],
+              "port": "34901",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Product Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://103.147.92.134:34902/health",
+              "protocol": "http",
+              "host": ["103.147.92.134"],
+              "port": "34902",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Order Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://103.147.92.134:34903/health",
+              "protocol": "http",
+              "host": ["103.147.92.134"],
+              "port": "34903",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Notification Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://103.147.92.134:34904/health",
+              "protocol": "http",
+              "host": ["103.147.92.134"],
+              "port": "34904",
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
         {
@@ -45,8 +118,9 @@
                 "exec": [
                   "var res = pm.response.json();",
                   "if (res.success && res.data && res.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"token\", res.data.accessToken);",
-                  "    pm.collectionVariables.set(\"refresh_token\", res.data.refreshToken);",
+                  "    pm.collectionVariables.set('token', res.data.accessToken);",
+                  "    pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "    console.log('Token saved:', res.data.accessToken.substring(0, 20) + '...');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -56,10 +130,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -81,7 +152,8 @@
                 "exec": [
                   "var res = pm.response.json();",
                   "if (res.success && res.data && res.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"seller_token\", res.data.accessToken);",
+                  "    pm.collectionVariables.set('seller_token', res.data.accessToken);",
+                  "    console.log('Seller token saved:', res.data.accessToken.substring(0, 20) + '...');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -91,10 +163,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -108,7 +177,7 @@
           }
         },
         {
-          "name": "Login",
+          "name": "Login as Buyer",
           "event": [
             {
               "listen": "test",
@@ -116,8 +185,9 @@
                 "exec": [
                   "var res = pm.response.json();",
                   "if (res.success && res.data && res.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"token\", res.data.accessToken);",
-                  "    pm.collectionVariables.set(\"refresh_token\", res.data.refreshToken);",
+                  "    pm.collectionVariables.set('token', res.data.accessToken);",
+                  "    pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "    console.log('Token saved:', res.data.accessToken.substring(0, 20) + '...');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -127,10 +197,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -152,7 +219,8 @@
                 "exec": [
                   "var res = pm.response.json();",
                   "if (res.success && res.data && res.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"seller_token\", res.data.accessToken);",
+                  "    pm.collectionVariables.set('seller_token', res.data.accessToken);",
+                  "    console.log('Seller token saved:', res.data.accessToken.substring(0, 20) + '...');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -162,10 +230,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -183,10 +248,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/auth/me",
@@ -200,10 +262,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -213,6 +272,84 @@
               "raw": "{{base_url}}/api/auth/refresh",
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "users"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/users/1/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "users", "1", "deactivate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Otomotif\",\n  \"description\": \"Produk otomotif dan aksesoris\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Delete Category (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/categories/6",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", "6"]
             }
           }
         }
@@ -278,18 +415,12 @@
           }
         },
         {
-          "name": "Create Product",
+          "name": "Create Product (Seller)",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{seller_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{seller_token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -303,18 +434,12 @@
           }
         },
         {
-          "name": "Update Product",
+          "name": "Update Product (Seller)",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{seller_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{seller_token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -328,14 +453,11 @@
           }
         },
         {
-          "name": "Delete Product",
+          "name": "Delete Product (Seller)",
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{seller_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{seller_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/products/1",
@@ -347,69 +469,10 @@
       ]
     },
     {
-      "name": "Categories",
-      "item": [
-        {
-          "name": "Get All Categories",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/categories",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories"]
-            }
-          }
-        },
-        {
-          "name": "Create Category",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Otomotif\",\n  \"description\": \"Produk otomotif dan aksesoris\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/categories",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories"]
-            }
-          }
-        },
-        {
-          "name": "Delete Category",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/categories/6",
-              "host": ["{{base_url}}"],
-              "path": ["api", "categories", "6"]
-            }
-          }
-        }
-      ]
-    },
-    {
       "name": "Orders",
       "item": [
         {
-          "name": "Create Order",
+          "name": "Create Order (Buyer)",
           "event": [
             {
               "listen": "test",
@@ -417,7 +480,8 @@
                 "exec": [
                   "var res = pm.response.json();",
                   "if (res.success && res.data && res.data.id) {",
-                  "    pm.collectionVariables.set(\"order_id\", res.data.id);",
+                  "    pm.collectionVariables.set('order_id', res.data.id);",
+                  "    console.log('Order ID saved:', res.data.id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -427,14 +491,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -452,10 +510,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/orders",
@@ -465,14 +520,11 @@
           }
         },
         {
-          "name": "Get All Orders (Seller/Admin)",
+          "name": "Get All Orders (Seller)",
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{seller_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{seller_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/orders",
@@ -486,10 +538,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/orders/{{order_id}}",
@@ -499,18 +548,12 @@
           }
         },
         {
-          "name": "Confirm Order",
+          "name": "Confirm Order (Seller)",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{seller_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{seller_token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -524,18 +567,12 @@
           }
         },
         {
-          "name": "Ship Order",
+          "name": "Ship Order (Seller)",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{seller_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{seller_token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -549,18 +586,12 @@
           }
         },
         {
-          "name": "Deliver Order",
+          "name": "Deliver Order (Seller)",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{seller_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{seller_token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -578,14 +609,8 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -595,6 +620,20 @@
               "raw": "{{base_url}}/api/orders/{{order_id}}/status",
               "host": ["{{base_url}}"],
               "path": ["api", "orders", "{{order_id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Delete Order (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "{{order_id}}"]
             }
           }
         }
@@ -608,10 +647,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications",
@@ -625,10 +661,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications?is_read=false",
@@ -645,10 +678,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications/unread-count",
@@ -658,14 +688,11 @@
           }
         },
         {
-          "name": "Mark as Read",
+          "name": "Mark Notification as Read",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications/1/read",
@@ -675,92 +702,16 @@
           }
         },
         {
-          "name": "Mark All as Read",
+          "name": "Mark All Notifications as Read",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications/read-all",
               "host": ["{{base_url}}"],
               "path": ["api", "notifications", "read-all"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Health Check",
-      "item": [
-        {
-          "name": "Gateway Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
-            }
-          }
-        },
-        {
-          "name": "Auth Service Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3001/health",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3001",
-              "path": ["health"]
-            }
-          }
-        },
-        {
-          "name": "Product Service Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3002/health",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3002",
-              "path": ["health"]
-            }
-          }
-        },
-        {
-          "name": "Order Service Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3003/health",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3003",
-              "path": ["health"]
-            }
-          }
-        },
-        {
-          "name": "Notification Service Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:3004/health",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "3004",
-              "path": ["health"]
             }
           }
         }
