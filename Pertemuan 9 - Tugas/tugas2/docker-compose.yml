@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  # ─── Infrastructure ──────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: marketplace_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"   # expose ke port 3307 agar tidak bentrok dengan XAMPP di 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: marketplace_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Services ────────────────────────────────────────────────
+  auth-service:
+    build: ./auth-service
+    container_name: marketplace_auth
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: marketplace_auth
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey123456789}
+      JWT_EXPIRES_IN: 1d
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-supersecretrefreshkey123456789}
+      JWT_REFRESH_EXPIRES_IN: 7d
+    ports:
+      - "3001:3001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  product-service:
+    build: ./product-service
+    container_name: marketplace_product
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: marketplace_products
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey123456789}
+    ports:
+      - "3002:3002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  order-service:
+    build: ./order-service
+    container_name: marketplace_order
+    restart: unless-stopped
+    environment:
+      PORT: 3003
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: marketplace_orders
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey123456789}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      PRODUCT_SERVICE_URL: http://product-service:3002
+    ports:
+      - "3003:3003"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    build: ./notification-service
+    container_name: marketplace_notification
+    restart: unless-stopped
+    environment:
+      PORT: 3004
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: marketplace_notifications
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey123456789}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+    ports:
+      - "3004:3004"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: marketplace_gateway
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey123456789}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PRODUCT_SERVICE_URL: http://product-service:3002
+      ORDER_SERVICE_URL: http://order-service:3003
+      NOTIFICATION_SERVICE_URL: http://notification-service:3004
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX: 100
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - notification-service
+
+volumes:
+  mysql_data:
+  rabbitmq_data:
