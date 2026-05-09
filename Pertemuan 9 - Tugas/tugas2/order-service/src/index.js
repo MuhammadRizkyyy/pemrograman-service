@@ -25,16 +25,25 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
-const start = async () => {
-  try {
-    await initDB();
-    await connect();
-    app.listen(PORT, () => {
-      console.log(`[Order Service] Running on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error('[Order Service] Failed to start:', err);
-    process.exit(1);
+const start = async (retries = 10, delay = 3000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await initDB();
+      await connect();
+      app.listen(PORT, () => {
+        console.log(`[Order Service] Running on port ${PORT}`);
+      });
+      return;
+    } catch (err) {
+      console.error(`[Order Service] Start attempt ${i + 1}/${retries} failed:`, err.message);
+      if (i < retries - 1) {
+        console.log(`[Order Service] Retrying in ${delay / 1000}s...`);
+        await new Promise((res) => setTimeout(res, delay));
+      } else {
+        console.error('[Order Service] All attempts failed, exiting.');
+        process.exit(1);
+      }
+    }
   }
 };
 

@@ -1,7 +1,6 @@
-version: '3.8'
+version: '3.7'
 
 services:
-  # ─── Infrastructure ──────────────────────────────────────────
   mysql:
     image: mysql:8.0
     container_name: marketplace_mysql
@@ -12,7 +11,7 @@ services:
       MYSQL_CHARACTER_SET_SERVER: utf8mb4
       MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     ports:
-      - "3307:3306"   # expose ke port 3307 agar tidak bentrok dengan XAMPP di 3306
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -40,7 +39,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Services ────────────────────────────────────────────────
   auth-service:
     build: ./auth-service
     container_name: marketplace_auth
@@ -59,8 +57,9 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
+    links:
+      - mysql
 
   product-service:
     build: ./product-service
@@ -77,8 +76,9 @@ services:
     ports:
       - "3002:3002"
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
+    links:
+      - mysql
 
   order-service:
     build: ./order-service
@@ -97,10 +97,11 @@ services:
     ports:
       - "3003:3003"
     depends_on:
-      mysql:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - mysql
+      - rabbitmq
+    links:
+      - mysql
+      - rabbitmq
 
   notification-service:
     build: ./notification-service
@@ -118,10 +119,11 @@ services:
     ports:
       - "3004:3004"
     depends_on:
-      mysql:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - mysql
+      - rabbitmq
+    links:
+      - mysql
+      - rabbitmq
 
   api-gateway:
     build: ./api-gateway
@@ -139,6 +141,11 @@ services:
     ports:
       - "3000:3000"
     depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - notification-service
+    links:
       - auth-service
       - product-service
       - order-service
