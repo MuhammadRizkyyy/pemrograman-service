@@ -172,7 +172,7 @@ Refresh access token.
 { "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
 ```
 
-#### GET /api/auth/me 🔒
+#### GET /api/auth/me 
 Lihat profil sendiri. Membutuhkan `Authorization: Bearer <token>`
 
 **Response (200):**
@@ -183,10 +183,10 @@ Lihat profil sendiri. Membutuhkan `Authorization: Bearer <token>`
 }
 ```
 
-#### GET /api/auth/users 🔒 (admin)
+#### GET /api/auth/users (admin)
 Lihat semua pengguna.
 
-#### PUT /api/auth/users/:id/deactivate 🔒 (admin)
+#### PUT /api/auth/users/:id/deactivate (admin)
 Nonaktifkan pengguna.
 
 ---
@@ -219,7 +219,7 @@ Lihat semua produk (publik). Query params: `page`, `limit`, `category_id`, `sear
 #### GET /api/products/:id
 Detail produk.
 
-#### POST /api/products 🔒 (seller, admin)
+#### POST /api/products (seller, admin)
 Tambah produk baru.
 
 **Request:**
@@ -234,10 +234,10 @@ Tambah produk baru.
 }
 ```
 
-#### PUT /api/products/:id 🔒 (seller owner, admin)
+#### PUT /api/products/:id (seller owner, admin)
 Update produk.
 
-#### DELETE /api/products/:id 🔒 (seller owner, admin)
+#### DELETE /api/products/:id (seller owner, admin)
 Hapus produk (soft delete).
 
 #### GET /api/products/seller/:sellerId
@@ -261,7 +261,7 @@ Lihat semua kategori (publik).
 }
 ```
 
-#### POST /api/categories 🔒 (admin)
+#### POST /api/categories (admin)
 Tambah kategori baru.
 
 **Request:**
@@ -269,14 +269,14 @@ Tambah kategori baru.
 { "name": "Otomotif", "description": "Produk otomotif" }
 ```
 
-#### DELETE /api/categories/:id 🔒 (admin)
+#### DELETE /api/categories/:id (admin)
 Hapus kategori.
 
 ---
 
 ### Order Service `/api/orders`
 
-#### POST /api/orders 🔒 (buyer)
+#### POST /api/orders (buyer)
 Buat pesanan baru. Otomatis mengurangi stok dan mengirim event ke RabbitMQ.
 
 **Request:**
@@ -316,14 +316,14 @@ Buat pesanan baru. Otomatis mengurangi stok dan mengirim event ke RabbitMQ.
 }
 ```
 
-#### GET /api/orders 🔒
+#### GET /api/orders 
 Lihat daftar pesanan. Buyer hanya melihat pesanan sendiri, admin melihat semua.
 Query params: `page`, `limit`, `status`
 
-#### GET /api/orders/:id 🔒
+#### GET /api/orders/:id 
 Detail pesanan.
 
-#### PUT /api/orders/:id/status 🔒
+#### PUT /api/orders/:id/status 
 Update status pesanan.
 - Buyer: hanya bisa `cancelled` untuk pesanan `pending` milik sendiri
 - Seller/Admin: bisa `confirmed`, `shipped`, `delivered`, `cancelled`
@@ -333,14 +333,14 @@ Update status pesanan.
 { "status": "confirmed" }
 ```
 
-#### DELETE /api/orders/:id 🔒 (admin)
+#### DELETE /api/orders/:id (admin)
 Hapus pesanan.
 
 ---
 
 ### Notification Service `/api/notifications`
 
-#### GET /api/notifications 🔒
+#### GET /api/notifications 
 Lihat notifikasi milik sendiri.
 Query params: `page`, `limit`, `is_read` (true/false)
 
@@ -362,44 +362,14 @@ Query params: `page`, `limit`, `is_read` (true/false)
 }
 ```
 
-#### GET /api/notifications/unread-count 🔒
+#### GET /api/notifications/unread-count 
 Jumlah notifikasi belum dibaca.
 
-#### PUT /api/notifications/:id/read 🔒
+#### PUT /api/notifications/:id/read 
 Tandai notifikasi sebagai sudah dibaca.
 
-#### PUT /api/notifications/read-all 🔒
+#### PUT /api/notifications/read-all 
 Tandai semua notifikasi sebagai sudah dibaca.
-
----
-
-## Alur Message Broker (RabbitMQ)
-
-```
-Order Service                    RabbitMQ                  Notification Service
-     │                               │                              │
-     │  POST /orders (buyer)         │                              │
-     │──────────────────────────────►│                              │
-     │                               │                              │
-     │  publish: order.created       │                              │
-     │──────────────────────────────►│                              │
-     │                               │  consume: order.created      │
-     │                               │─────────────────────────────►│
-     │                               │                              │
-     │                               │  Simpan notifikasi ke DB     │
-     │                               │                              │
-     │  PUT /orders/:id/status       │                              │
-     │──────────────────────────────►│                              │
-     │                               │                              │
-     │  publish: order.status.xxx    │                              │
-     │──────────────────────────────►│                              │
-     │                               │  consume: order.status.*     │
-     │                               │─────────────────────────────►│
-     │                               │                              │
-     │                               │  Simpan notifikasi status    │
-```
-
----
 
 ## Contoh Alur Penggunaan Lengkap
 
@@ -444,80 +414,6 @@ curl -X POST $BASE_URL/api/orders \
 curl $BASE_URL/api/notifications \
   -H "Authorization: Bearer $BUYER_TOKEN"
 ```
-
----
-
-## Struktur Folder
-
-```
-.
-├── api-gateway/
-│   ├── src/
-│   │   ├── middleware/
-│   │   │   ├── auth.js          # JWT validation
-│   │   │   ├── logger.js        # Morgan + Request ID
-│   │   │   └── rateLimiter.js   # Rate limiting
-│   │   └── index.js             # Proxy routing
-│   ├── Dockerfile
-│   └── package.json
-│
-├── auth-service/
-│   ├── src/
-│   │   ├── config/database.js
-│   │   ├── controllers/authController.js
-│   │   ├── middleware/auth.js
-│   │   ├── routes/authRoutes.js
-│   │   └── index.js
-│   ├── Dockerfile
-│   └── package.json
-│
-├── product-service/
-│   ├── src/
-│   │   ├── config/database.js
-│   │   ├── controllers/
-│   │   │   ├── productController.js
-│   │   │   └── categoryController.js
-│   │   ├── middleware/auth.js
-│   │   ├── routes/
-│   │   │   ├── productRoutes.js
-│   │   │   └── categoryRoutes.js
-│   │   └── index.js
-│   ├── Dockerfile
-│   └── package.json
-│
-├── order-service/
-│   ├── src/
-│   │   ├── config/
-│   │   │   ├── database.js
-│   │   │   └── rabbitmq.js      # Publisher
-│   │   ├── controllers/orderController.js
-│   │   ├── middleware/auth.js
-│   │   ├── routes/orderRoutes.js
-│   │   └── index.js
-│   ├── Dockerfile
-│   └── package.json
-│
-├── notification-service/
-│   ├── src/
-│   │   ├── config/database.js
-│   │   ├── consumers/orderConsumer.js  # RabbitMQ Consumer
-│   │   ├── routes/notificationRoutes.js
-│   │   └── index.js
-│   ├── Dockerfile
-│   └── package.json
-│
-├── database/
-│   └── init.sql                 # Inisialisasi semua database
-│
-├── postman/
-│   └── Marketplace_API.postman_collection.json
-│
-├── docker-compose.yml
-├── .env.example
-└── README.md
-```
-
----
 
 ## Akun Default
 
