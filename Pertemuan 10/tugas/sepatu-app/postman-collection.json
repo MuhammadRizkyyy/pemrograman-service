@@ -7,12 +7,12 @@
   "variable": [
     {
       "key": "service_a_url",
-      "value": "http://localhost:34500",
+      "value": "http://103.147.92.134:34500",
       "type": "string"
     },
     {
       "key": "service_b_url",
-      "value": "http://localhost:34501",
+      "value": "http://103.147.92.134:34501",
       "type": "string"
     }
   ],
@@ -230,11 +230,11 @@
           }
         },
         {
-          "name": "Rate Limit - Request 6 (429)",
+          "name": "Rate Limit - Request 6 (429 Too Many Requests)",
           "request": {
             "method": "GET",
             "url": "{{service_a_url}}/api/sepatu",
-            "description": "Request ke-6 MELEBIHI batas! Expected: 429 Too Many Requests"
+            "description": "Request ke-6 melebihi batas. Expected: 429 Too Many Requests"
           }
         }
       ]
