@@ -1,23 +1,95 @@
 # Toko Sepatu - Rate Limiting & Service Integration
 ## Pertemuan 10 - Pemrograman Berbasis Service
 
-## Service A - Node.js/Express (Port 3000)
+Aplikasi toko sepatu dengan 2 service yang terintegrasi:
+- **Service A**: Node.js/Express Gateway dengan Rate Limiting
+- **Service B**: PHP Native untuk CRUD Database
+
+---
+
+## Arsitektur
+
+```
+Client
+  |
+  v
+Service A (Node.js) - Port 34500
+  |  Rate Limiting: 5 req/menit
+  v
+Service B (PHP) - Port 34501
+  |
+  v
+MySQL Database - Port 34502
+```
+
+---
+
+## Quick Start dengan Docker
+
+### Prasyarat
+- Docker & Docker Compose terinstall
+- Port 34500, 34501, 34502, 34503 tersedia
+
+### Jalankan Semua Service
+
+```bash
+# Clone repo
+git clone https://github.com/MuhammadRizkyyy/pemrograman-service.git
+cd pemrograman-service/Pertemuan\ 10/tugas/sepatu-app
+
+# Build dan jalankan semua container
+docker compose up -d --build
+
+# Cek status container
+docker compose ps
+
+# Lihat logs
+docker compose logs -f
+```
+
+### Stop & Hapus Container
+
+```bash
+# Stop semua container
+docker compose down
+
+# Stop dan hapus volume (database akan terhapus)
+docker compose down -v
+```
+
+---
+
+## Service yang Berjalan
+
+| Service | Port | URL | Deskripsi |
+|---------|------|-----|-----------|
+| Service A | 34500 | http://103.147.92.134:34500 | Node.js Gateway dengan Rate Limiting |
+| Service B | 34501 | http://103.147.92.134:34501 | PHP Backend untuk CRUD |
+| MySQL | 34502 | localhost:34502 | Database |
+| phpMyAdmin | 34503 | http://103.147.92.134:34503 | Web UI untuk database |
+
+---
+
+## Service A - Node.js/Express
 
 ### Fitur
 - Rate Limiting: **maksimal 5 request per menit** per IP
 - Proxy semua request ke Service B
 - Response 429 jika melebihi batas
+- CORS enabled
 
-### Instalasi & Jalankan Lokal
-```bash
-cd service-a
-npm install
-npm start
+### Environment Variables
+```env
+PORT=34500
+SERVICE_B_URL=http://service-b:34501
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=5
 ```
 
 ### Endpoints (via Service A)
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
+| GET | / | Health check Service A |
 | GET | /api/sepatu | Ambil semua sepatu |
 | GET | /api/sepatu/:id | Ambil sepatu by ID |
 | POST | /api/sepatu | Tambah sepatu baru |
@@ -29,48 +101,47 @@ npm start
 
 ---
 
-## Service B - PHP Native (Port 8080)
+## Service B - PHP Native
 
 ### Fitur
 - CRUD Sepatu dengan validasi stok
 - CRUD Orders dengan transaksi DB
 - JOIN query untuk detail order
+- PDO dengan prepared statements
 
-### Jalankan Lokal
-```bash
-cd service-b
-# Setup database dulu
-mysql -u root < setup.sql
-# Jalankan PHP built-in server
-php -S localhost:8080
+### Database Connection
+```php
+DB_HOST: mysql
+DB_PORT: 3306
+DB_USER: root
+DB_PASS: root123
+DB_NAME: toko_sepatu
 ```
 
 ---
 
-## Setup Database
+## Testing dengan Postman
 
-```bash
-mysql -u root -p < service-b/setup.sql
+### Import Collection
+1. Buka Postman
+2. Import file `postman-collection.json`
+3. Collection sudah dikonfigurasi untuk server `103.147.92.134`
+
+### Test Rate Limiting
+Jalankan request berikut **6 kali berturut-turut**:
+```
+GET http://103.147.92.134:34500/api/sepatu
 ```
 
----
+**Expected:**
+- Request 1-5: `200 OK`
+- Request 6: `429 Too Many Requests`
 
-## Uji Lokal dengan Postman
+### Contoh Request
 
-### 1. Test Normal (200 OK)
-```
-GET http://localhost:3000/api/sepatu
-```
-
-### 2. Test Rate Limit (429 Too Many Requests)
-Kirim request ke endpoint yang sama **lebih dari 5 kali dalam 1 menit**:
-```
-GET http://localhost:3000/api/sepatu  (request ke-6 akan 429)
-```
-
-### 3. Contoh POST Sepatu
+**POST Tambah Sepatu**
 ```json
-POST http://localhost:3000/api/sepatu
+POST http://103.147.92.134:34500/api/sepatu
 Content-Type: application/json
 
 {
@@ -84,18 +155,19 @@ Content-Type: application/json
 }
 ```
 
-### 4. Contoh POST Order
+**POST Buat Order**
 ```json
-POST http://localhost:3000/api/orders
+POST http://103.147.92.134:34500/api/orders
 Content-Type: application/json
 
 {
   "nama_pembeli": "John Doe",
   "email_pembeli": "john@email.com",
   "telepon": "081234567890",
-  "alamat": "Jl. Contoh No.1, Jakarta",
-  "sepatu_id": 1,
-  "jumlah": 1
+  "alamat": "Jl. Contoh No.1, Jakarta Selatan",
+  "sepatu_id": 3,
+  "jumlah": 1,
+  "catatan": "Tolong dibungkus rapi"
 }
 ```
 
@@ -103,33 +175,122 @@ Content-Type: application/json
 
 ## Deploy ke Server
 
-```bash
-# Dari direktori sepatu-app/
-chmod +x deploy.sh
-./deploy.sh
-```
+### Via SSH
 
-Atau manual:
 ```bash
-# Upload file
-scp -P 8989 -r service-a mahasiswa@103.147.92.134:/home/mahasiswa/sepatu-app/
-scp -P 8989 -r service-b mahasiswa@103.147.92.134:/home/mahasiswa/sepatu-app/
-
 # SSH ke server
 ssh -p 8989 mahasiswa@103.147.92.134
 
-# Di server: jalankan Service A
-cd /home/mahasiswa/sepatu-app/service-a
-npm install && pm2 start index.js --name service-a
+# Clone atau pull repo
+git clone https://github.com/MuhammadRizkyyy/pemrograman-service.git
+# atau jika sudah ada:
+cd pemrograman-service
+git pull origin main
 
-# Di server: setup DB dan jalankan Service B
-mysql -u root < /home/mahasiswa/sepatu-app/service-b/setup.sql
-php -S 0.0.0.0:8080 -t /home/mahasiswa/sepatu-app/service-b &
+# Masuk ke folder project
+cd "Pertemuan 10/tugas/sepatu-app"
+
+# Jalankan dengan Docker
+docker compose up -d --build
+
+# Verifikasi
+curl http://localhost:34500/
+curl http://localhost:34501/
 ```
 
-### URL Setelah Deploy
-- Service A: `http://103.147.92.134:3000`
-- Service B: `http://103.147.92.134:8080`
+### Monitoring
+
+```bash
+# Lihat status container
+docker compose ps
+
+# Lihat logs semua service
+docker compose logs -f
+
+# Lihat logs service tertentu
+docker compose logs -f service-a
+docker compose logs -f service-b
+docker compose logs -f mysql
+
+# Restart service tertentu
+docker compose restart service-a
+
+# Masuk ke container
+docker compose exec service-a sh
+docker compose exec mysql mysql -uroot -proot123 toko_sepatu
+```
+
+---
+
+## Development Lokal (Tanpa Docker)
+
+### Service A
+```bash
+cd service-a
+npm install
+
+# Buat file .env
+cat > .env << EOF
+PORT=34500
+SERVICE_B_URL=http://localhost:34501
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=5
+EOF
+
+npm start
+```
+
+### Service B
+```bash
+cd service-b
+
+# Setup database
+mysql -u root -p < setup.sql
+
+# Jalankan PHP server
+php -S localhost:34501
+```
+
+---
+
+## Troubleshooting
+
+### Container tidak bisa start
+```bash
+# Cek logs error
+docker compose logs
+
+# Cek port yang digunakan
+netstat -tulpn | grep -E '34500|34501|34502|34503'
+
+# Rebuild dari awal
+docker compose down -v
+docker compose up -d --build
+```
+
+### Service A tidak bisa connect ke Service B
+```bash
+# Cek network
+docker network ls
+docker network inspect sepatu-app_sepatu-network
+
+# Cek apakah service-b sudah running
+docker compose ps
+```
+
+### Database connection error
+```bash
+# Cek MySQL container
+docker compose logs mysql
+
+# Masuk ke MySQL container
+docker compose exec mysql mysql -uroot -proot123
+
+# Cek database
+SHOW DATABASES;
+USE toko_sepatu;
+SHOW TABLES;
+```
 
 ---
 
@@ -140,6 +301,55 @@ php -S 0.0.0.0:8080 -t /home/mahasiswa/sepatu-app/service-b &
 | **Definisi** | Membatasi jumlah request dalam periode waktu tertentu | Mengatur kecepatan/laju pemrosesan request |
 | **Respons saat batas** | Tolak request (429 Too Many Requests) | Perlambat/tunda pemrosesan request |
 | **Tujuan** | Mencegah abuse & melindungi server | Menjaga kualitas layanan & stabilitas |
-| **Contoh** | Maks 5 req/menit → request ke-6 ditolak | Antrian request, diproses 5/menit secara bertahap |
+| **Contoh** | Maks 5 req/menit, request ke-6 ditolak | Antrian request, diproses 5/menit secara bertahap |
 | **User experience** | Request langsung gagal | Request menunggu, akhirnya berhasil |
 | **Implementasi** | express-rate-limit, nginx limit_req | Queue system, token bucket algorithm |
+
+### Implementasi di Project Ini
+
+Project ini menggunakan **Rate Limiting** dengan library `express-rate-limit`:
+- Batas: 5 request per menit per IP
+- Window: 60 detik (sliding window)
+- Response: HTTP 429 dengan pesan error
+
+---
+
+## Tech Stack
+
+- **Service A**: Node.js 18, Express, express-rate-limit, axios
+- **Service B**: PHP 8.3, PDO
+- **Database**: MySQL 8.0
+- **Container**: Docker, Docker Compose
+- **Web UI**: phpMyAdmin
+
+---
+
+## Struktur File
+
+```
+sepatu-app/
+├── docker-compose.yml          # Orchestration semua service
+├── postman-collection.json     # Collection untuk testing
+├── README.md                   # Dokumentasi ini
+├── server-setup.sh             # Script setup manual (legacy)
+├── service-a/
+│   ├── Dockerfile              # Image untuk Service A
+│   ├── index.js                # Main application
+│   ├── package.json            # Dependencies
+│   └── .env                    # Environment variables
+└── service-b/
+    ├── Dockerfile              # Image untuk Service B
+    ├── index.php               # Health check
+    ├── setup.sql               # Database schema & seed data
+    ├── config/
+    │   └── db.php              # Database connection
+    └── api/
+        ├── sepatu.php          # CRUD Sepatu
+        └── orders.php          # CRUD Orders
+```
+
+---
+
+## Lisensi
+
+Project untuk keperluan pembelajaran - Pertemuan 10 Pemrograman Berbasis Service
