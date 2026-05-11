@@ -1,0 +1,14 @@
+Options -Indexes
+DirectoryIndex index.php
+
+# Aktifkan mod_rewrite jika tersedia
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+</IfModule>
+
+# Keamanan: blokir akses ke file sensitif
+<FilesMatch "\.(sql|env|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

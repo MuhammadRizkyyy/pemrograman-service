@@ -1,0 +1,47 @@
+services:
+  # ─── MySQL Database ───────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: toko-sepatu-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: toko_sepatu
+      MYSQL_USER: sepatu_user
+      MYSQL_PASSWORD: sepatu123
+    ports:
+      - "34502:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./service-b/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    networks:
+      - sepatu-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── phpMyAdmin (opsional, untuk lihat DB via browser) ────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: toko-sepatu-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root123
+    ports:
+      - "34503:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - sepatu-network
+
+volumes:
+  mysql_data:
+
+networks:
+  sepatu-network:
+    driver: bridge

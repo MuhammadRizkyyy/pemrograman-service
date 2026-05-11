@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "Toko Sepatu - Rate Limiting & Service Integration",
+    "description": "Collection untuk testing Service A (Node.js) dan Service B (PHP) - Pertemuan 10",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "service_a_url",
+      "value": "http://localhost:34500",
+      "type": "string"
+    },
+    {
+      "key": "service_b_url",
+      "value": "http://localhost:34501",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Service A - Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/",
+            "description": "Cek status Service A (Node.js Gateway)"
+          }
+        },
+        {
+          "name": "Service B - Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{service_b_url}}/",
+            "description": "Cek status Service B (PHP Native)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sepatu - via Service A",
+      "item": [
+        {
+          "name": "GET Semua Sepatu",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu",
+            "description": "Ambil semua data sepatu. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "GET Sepatu by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu/1",
+            "description": "Ambil sepatu berdasarkan ID. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "GET Sepatu - Not Found",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu/999",
+            "description": "Sepatu tidak ditemukan. Expected: 404 Not Found"
+          }
+        },
+        {
+          "name": "POST Tambah Sepatu",
+          "request": {
+            "method": "POST",
+            "url": "{{service_a_url}}/api/sepatu",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Air Force 1\",\n  \"merek\": \"Nike\",\n  \"ukuran\": \"42\",\n  \"warna\": \"Putih\",\n  \"harga\": 1200000,\n  \"stok\": 10,\n  \"deskripsi\": \"Sepatu klasik Nike Air Force 1\"\n}"
+            },
+            "description": "Tambah sepatu baru. Expected: 201 Created"
+          }
+        },
+        {
+          "name": "POST Tambah Sepatu - Validasi Gagal",
+          "request": {
+            "method": "POST",
+            "url": "{{service_a_url}}/api/sepatu",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Sepatu Tanpa Merek\"\n}"
+            },
+            "description": "Validasi field wajib. Expected: 400 Bad Request"
+          }
+        },
+        {
+          "name": "PUT Update Sepatu",
+          "request": {
+            "method": "PUT",
+            "url": "{{service_a_url}}/api/sepatu/1",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"harga\": 1950000,\n  \"stok\": 20\n}"
+            },
+            "description": "Update harga dan stok sepatu. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "DELETE Sepatu",
+          "request": {
+            "method": "DELETE",
+            "url": "{{service_a_url}}/api/sepatu/9",
+            "description": "Hapus sepatu (gunakan ID yang tidak punya order). Expected: 200 OK"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders - via Service A",
+      "item": [
+        {
+          "name": "GET Semua Orders",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/orders",
+            "description": "Ambil semua pesanan. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "GET Order by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/orders/1",
+            "description": "Ambil detail pesanan. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "POST Buat Order Baru",
+          "request": {
+            "method": "POST",
+            "url": "{{service_a_url}}/api/orders",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pembeli\": \"John Doe\",\n  \"email_pembeli\": \"john@email.com\",\n  \"telepon\": \"081234567890\",\n  \"alamat\": \"Jl. Contoh No.1, Jakarta Selatan\",\n  \"sepatu_id\": 3,\n  \"jumlah\": 1,\n  \"catatan\": \"Tolong dibungkus rapi\"\n}"
+            },
+            "description": "Buat pesanan baru. Expected: 201 Created"
+          }
+        },
+        {
+          "name": "POST Order - Stok Tidak Cukup",
+          "request": {
+            "method": "POST",
+            "url": "{{service_a_url}}/api/orders",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pembeli\": \"Jane Doe\",\n  \"email_pembeli\": \"jane@email.com\",\n  \"telepon\": \"089876543210\",\n  \"alamat\": \"Jl. Test No.99, Bandung\",\n  \"sepatu_id\": 1,\n  \"jumlah\": 9999\n}"
+            },
+            "description": "Order melebihi stok. Expected: 400 Bad Request"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rate Limiting Test",
+      "item": [
+        {
+          "name": "Rate Limit - Request 1 (200 OK)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu",
+            "description": "Request 1 dari 5. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "Rate Limit - Request 2 (200 OK)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu",
+            "description": "Request 2 dari 5. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "Rate Limit - Request 3 (200 OK)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu",
+            "description": "Request 3 dari 5. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "Rate Limit - Request 4 (200 OK)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu",
+            "description": "Request 4 dari 5. Expected: 200 OK"
+          }
+        },
+        {
+          "name": "Rate Limit - Request 5 (200 OK)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu",
+            "description": "Request 5 dari 5 (batas terakhir). Expected: 200 OK"
+          }
+        },
+        {
+          "name": "Rate Limit - Request 6 (429)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_a_url}}/api/sepatu",
+            "description": "Request ke-6 MELEBIHI batas! Expected: 429 Too Many Requests"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Direct Service B (PHP)",
+      "item": [
+        {
+          "name": "GET Semua Sepatu (Direct)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_b_url}}/api/sepatu.php",
+            "description": "Akses langsung ke Service B tanpa rate limit"
+          }
+        },
+        {
+          "name": "GET Semua Orders (Direct)",
+          "request": {
+            "method": "GET",
+            "url": "{{service_b_url}}/api/orders.php",
+            "description": "Akses langsung ke Service B tanpa rate limit"
+          }
+        }
+      ]
+    }
+  ]
+}
