@@ -1,7 +1,5 @@
 # Toko Sepatu - Rate Limiting & Service Integration
-## Pertemuan 10 - Pemrograman Berbasis Layanan
-
----
+## Pertemuan 10 - Pemrograman Berbasis Service
 
 ## Service A - Node.js/Express (Port 3000)
 
@@ -132,3 +130,16 @@ php -S 0.0.0.0:8080 -t /home/mahasiswa/sepatu-app/service-b &
 ### URL Setelah Deploy
 - Service A: `http://103.147.92.134:3000`
 - Service B: `http://103.147.92.134:8080`
+
+---
+
+## Throttling vs Rate Limiting
+
+| Aspek | Rate Limiting | Throttling |
+|-------|--------------|------------|
+| **Definisi** | Membatasi jumlah request dalam periode waktu tertentu | Mengatur kecepatan/laju pemrosesan request |
+| **Respons saat batas** | Tolak request (429 Too Many Requests) | Perlambat/tunda pemrosesan request |
+| **Tujuan** | Mencegah abuse & melindungi server | Menjaga kualitas layanan & stabilitas |
+| **Contoh** | Maks 5 req/menit → request ke-6 ditolak | Antrian request, diproses 5/menit secara bertahap |
+| **User experience** | Request langsung gagal | Request menunggu, akhirnya berhasil |
+| **Implementasi** | express-rate-limit, nginx limit_req | Queue system, token bucket algorithm |
