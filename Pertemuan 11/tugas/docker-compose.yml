@@ -1,0 +1,84 @@
+services:
+  # ── Redis (Caching) ──────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    ports:
+      - "3093:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ml-network
+
+  # ── Python FastAPI ML Service ────────────────────────────────────────────────
+  python-ml-service:
+    build:
+      context: ./python-ml-service
+      dockerfile: Dockerfile
+    container_name: python-ml-service
+    restart: unless-stopped
+    ports:
+      - "3091:3091"
+    environment:
+      - PORT=3091
+      - HOST=0.0.0.0
+      - SECRET_KEY=super-secret-key-ganti-di-production-2024
+      - REDIS_URL=redis://redis:6379
+      - CACHE_TTL=300
+      - MODEL_PATH=model/iris_model.joblib
+      - SCALER_PATH=model/scaler.joblib
+      - METADATA_PATH=model/metadata.joblib
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3091/health')"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - ml-network
+
+  # ── Express.js Gateway Service ───────────────────────────────────────────────
+  express-service:
+    build:
+      context: ./express-service
+      dockerfile: Dockerfile
+    container_name: express-ml-gateway
+    restart: unless-stopped
+    ports:
+      - "3092:3092"
+    environment:
+      - PORT=3092
+      - NODE_ENV=production
+      - ML_SERVICE_URL=http://python-ml-service:3091
+      - ML_USERNAME=user
+      - ML_PASSWORD=user123
+      - CB_TIMEOUT=5000
+      - CB_ERROR_THRESHOLD=50
+      - CB_RESET_TIMEOUT=30000
+    depends_on:
+      python-ml-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3092/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ml-network
+
+volumes:
+  redis_data:
+
+networks:
+  ml-network:
+    driver: bridge
