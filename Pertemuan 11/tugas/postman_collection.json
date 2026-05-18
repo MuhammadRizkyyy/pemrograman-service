@@ -1,24 +1,29 @@
 {
   "info": {
-    "name": "Iris ML Microservice",
-    "_postman_id": "iris-ml-microservice-collection",
-    "description": "Koleksi API untuk sistem microservice Iris ML dengan FastAPI + Express.js",
+    "name": "Iris ML Microservice - Production Server",
+    "_postman_id": "iris-ml-microservice-production",
+    "description": "Koleksi API untuk testing sistem microservice Iris ML di server production\nServer: 103.147.92.134\n- Express Gateway: http://103.147.92.134:3092\n- Python ML Service: http://103.147.92.134:3091",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "ml_url", "value": "http://localhost:3091", "type": "string" },
-    { "key": "express_url", "value": "http://localhost:3092", "type": "string" },
+    { "key": "ml_url", "value": "http://103.147.92.134:3091", "type": "string" },
+    { "key": "express_url", "value": "http://103.147.92.134:3092", "type": "string" },
     { "key": "token", "value": "", "type": "string" }
   ],
   "item": [
     {
-      "name": "Python ML Service (FastAPI)",
+      "name": "Python ML Service (FastAPI) - Port 3091",
       "item": [
         {
           "name": "Health Check",
           "request": {
             "method": "GET",
-            "url": "{{ml_url}}/health",
+            "header": [],
+            "url": {
+              "raw": "{{ml_url}}/health",
+              "host": ["{{ml_url}}"],
+              "path": ["health"]
+            },
             "description": "Cek status ML service, model, dan Redis"
           }
         },
@@ -32,138 +37,332 @@
                   "var json = pm.response.json();",
                   "if (json.access_token) {",
                   "  pm.collectionVariables.set('token', json.access_token);",
-                  "  console.log('Token saved!');",
+                  "  console.log('Token saved: ' + json.access_token);",
+                  "  pm.test('Login berhasil', function() { pm.response.to.have.status(200); });",
                   "}"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
           "request": {
             "method": "POST",
-            "url": "{{ml_url}}/auth/token",
-            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
             "body": {
               "mode": "urlencoded",
               "urlencoded": [
-                { "key": "username", "value": "user" },
-                { "key": "password", "value": "user123" }
+                { "key": "username", "value": "user", "type": "text" },
+                { "key": "password", "value": "user123", "type": "text" }
               ]
             },
-            "description": "Login dan dapatkan JWT token. Token otomatis disimpan ke variable."
-          }
-        },
-        {
-          "name": "Predict - Iris Setosa",
-          "request": {
-            "method": "POST",
-            "url": "{{ml_url}}/predict",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sepal_length\": 5.1,\n  \"sepal_width\": 3.5,\n  \"petal_length\": 1.4,\n  \"petal_width\": 0.2\n}"
+            "url": {
+              "raw": "{{ml_url}}/auth/token",
+              "host": ["{{ml_url}}"],
+              "path": ["auth", "token"]
             },
-            "description": "Prediksi bunga Iris (contoh: Iris-setosa)"
+            "description": "Login sebagai 'user'. Token JWT otomatis tersimpan ke variable {{token}}.\n\nCredential tersedia:\n- user / user123\n- admin / admin123"
           }
         },
         {
-          "name": "Predict - Iris Virginica",
-          "request": {
-            "method": "POST",
-            "url": "{{ml_url}}/predict",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sepal_length\": 6.3,\n  \"sepal_width\": 3.3,\n  \"petal_length\": 6.0,\n  \"petal_width\": 2.5\n}"
+          "name": "Login - Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "  pm.collectionVariables.set('token', json.access_token);",
+                  "  console.log('Admin token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
-          }
-        },
-        {
-          "name": "Batch Predict",
+          ],
           "request": {
             "method": "POST",
-            "url": "{{ml_url}}/batch-predict",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"data\": [\n    { \"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2 },\n    { \"sepal_length\": 7.0, \"sepal_width\": 3.2, \"petal_length\": 4.7, \"petal_width\": 1.4 },\n    { \"sepal_length\": 6.3, \"sepal_width\": 3.3, \"petal_length\": 6.0, \"petal_width\": 2.5 }\n  ]\n}"
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "username", "value": "admin", "type": "text" },
+                { "key": "password", "value": "admin123", "type": "text" }
+              ]
             },
-            "description": "Prediksi batch untuk 3 bunga sekaligus"
+            "url": {
+              "raw": "{{ml_url}}/auth/token",
+              "host": ["{{ml_url}}"],
+              "path": ["auth", "token"]
+            },
+            "description": "Login sebagai admin"
           }
         },
         {
           "name": "Model Info",
           "request": {
             "method": "GET",
-            "url": "{{ml_url}}/model-info",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "description": "Informasi detail model ML"
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{ml_url}}/model-info",
+              "host": ["{{ml_url}}"],
+              "path": ["model-info"]
+            },
+            "description": "Informasi detail model ML (butuh JWT token)"
           }
         },
         {
-          "name": "Swagger UI",
-          "request": {
-            "method": "GET",
-            "url": "{{ml_url}}/docs",
-            "description": "Buka Swagger UI di browser"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Express.js Gateway",
-      "item": [
-        {
-          "name": "Health Check",
-          "request": {
-            "method": "GET",
-            "url": "{{express_url}}/health",
-            "description": "Status Express gateway dan koneksi ke ML service"
-          }
-        },
-        {
-          "name": "Predict via Gateway",
+          "name": "Predict - Iris Setosa",
           "request": {
             "method": "POST",
-            "url": "{{express_url}}/api/predict",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sepal_length\": 5.1,\n  \"sepal_width\": 3.5,\n  \"petal_length\": 1.4,\n  \"petal_width\": 0.2\n}"
+              "raw": "{\n  \"sepal_length\": 5.1,\n  \"sepal_width\": 3.5,\n  \"petal_length\": 1.4,\n  \"petal_width\": 0.2\n}",
+              "options": { "raw": { "language": "json" } }
             },
-            "description": "Prediksi melalui Express gateway (tidak perlu JWT manual, gateway yang handle)"
+            "url": {
+              "raw": "{{ml_url}}/predict",
+              "host": ["{{ml_url}}"],
+              "path": ["predict"]
+            },
+            "description": "Prediksi bunga Iris → expected: Iris-setosa"
           }
         },
         {
           "name": "Predict - Iris Versicolor",
           "request": {
             "method": "POST",
-            "url": "{{express_url}}/api/predict",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sepal_length\": 7.0,\n  \"sepal_width\": 3.2,\n  \"petal_length\": 4.7,\n  \"petal_width\": 1.4\n}"
-            }
+              "raw": "{\n  \"sepal_length\": 7.0,\n  \"sepal_width\": 3.2,\n  \"petal_length\": 4.7,\n  \"petal_width\": 1.4\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ml_url}}/predict",
+              "host": ["{{ml_url}}"],
+              "path": ["predict"]
+            },
+            "description": "Prediksi bunga Iris → expected: Iris-versicolor"
           }
         },
         {
-          "name": "Batch Predict via Gateway",
+          "name": "Predict - Iris Virginica",
           "request": {
             "method": "POST",
-            "url": "{{express_url}}/api/predict/batch",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"data\": [\n    { \"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2 },\n    { \"sepal_length\": 7.0, \"sepal_width\": 3.2, \"petal_length\": 4.7, \"petal_width\": 1.4 },\n    { \"sepal_length\": 6.3, \"sepal_width\": 3.3, \"petal_length\": 6.0, \"petal_width\": 2.5 }\n  ]\n}"
-            }
+              "raw": "{\n  \"sepal_length\": 6.3,\n  \"sepal_width\": 3.3,\n  \"petal_length\": 6.0,\n  \"petal_width\": 2.5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ml_url}}/predict",
+              "host": ["{{ml_url}}"],
+              "path": ["predict"]
+            },
+            "description": "Prediksi bunga Iris → expected: Iris-virginica"
+          }
+        },
+        {
+          "name": "Batch Predict - 5 Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [\n    {\n      \"sepal_length\": 5.1,\n      \"sepal_width\": 3.5,\n      \"petal_length\": 1.4,\n      \"petal_width\": 0.2\n    },\n    {\n      \"sepal_length\": 6.3,\n      \"sepal_width\": 3.3,\n      \"petal_length\": 6.0,\n      \"petal_width\": 2.5\n    },\n    {\n      \"sepal_length\": 5.8,\n      \"sepal_width\": 2.7,\n      \"petal_length\": 4.1,\n      \"petal_width\": 1.0\n    },\n    {\n      \"sepal_length\": 4.9,\n      \"sepal_width\": 3.1,\n      \"petal_length\": 1.5,\n      \"petal_width\": 0.1\n    },\n    {\n      \"sepal_length\": 7.2,\n      \"sepal_width\": 3.0,\n      \"petal_length\": 5.8,\n      \"petal_width\": 1.6\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{ml_url}}/batch-predict",
+              "host": ["{{ml_url}}"],
+              "path": ["batch-predict"]
+            },
+            "description": "Prediksi batch 5 data sekaligus:\n1. Iris-setosa\n2. Iris-virginica\n3. Iris-versicolor\n4. Iris-setosa\n5. Iris-virginica"
+          }
+        },
+        {
+          "name": "Swagger UI (Docs)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{ml_url}}/docs",
+              "host": ["{{ml_url}}"],
+              "path": ["docs"]
+            },
+            "description": "Buka Swagger UI di browser: http://103.147.92.134:3091/docs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Express.js Gateway - Port 3092",
+      "item": [
+        {
+          "name": "Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{express_url}}/",
+              "host": ["{{express_url}}"],
+              "path": [""]
+            },
+            "description": "Info service dan daftar endpoint"
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{express_url}}/health",
+              "host": ["{{express_url}}"],
+              "path": ["health"]
+            },
+            "description": "Status Express gateway, koneksi ke ML service, dan circuit breaker"
+          }
+        },
+        {
+          "name": "Predict - Iris Setosa",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sepal_length\": 5.1,\n  \"sepal_width\": 3.5,\n  \"petal_length\": 1.4,\n  \"petal_width\": 0.2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{express_url}}/api/predict",
+              "host": ["{{express_url}}"],
+              "path": ["api", "predict"]
+            },
+            "description": "Prediksi via Express gateway → expected: Iris-setosa\n(Tidak perlu JWT, gateway yang handle otentikasi ke ML service)"
+          }
+        },
+        {
+          "name": "Predict - Iris Versicolor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sepal_length\": 7.0,\n  \"sepal_width\": 3.2,\n  \"petal_length\": 4.7,\n  \"petal_width\": 1.4\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{express_url}}/api/predict",
+              "host": ["{{express_url}}"],
+              "path": ["api", "predict"]
+            },
+            "description": "Prediksi via Express gateway → expected: Iris-versicolor"
+          }
+        },
+        {
+          "name": "Predict - Iris Virginica",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sepal_length\": 6.3,\n  \"sepal_width\": 3.3,\n  \"petal_length\": 6.0,\n  \"petal_width\": 2.5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{express_url}}/api/predict",
+              "host": ["{{express_url}}"],
+              "path": ["api", "predict"]
+            },
+            "description": "Prediksi via Express gateway → expected: Iris-virginica"
+          }
+        },
+        {
+          "name": "Batch Predict - 5 Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [\n    {\n      \"sepal_length\": 5.1,\n      \"sepal_width\": 3.5,\n      \"petal_length\": 1.4,\n      \"petal_width\": 0.2\n    },\n    {\n      \"sepal_length\": 6.3,\n      \"sepal_width\": 3.3,\n      \"petal_length\": 6.0,\n      \"petal_width\": 2.5\n    },\n    {\n      \"sepal_length\": 5.8,\n      \"sepal_width\": 2.7,\n      \"petal_length\": 4.1,\n      \"petal_width\": 1.0\n    },\n    {\n      \"sepal_length\": 4.9,\n      \"sepal_width\": 3.1,\n      \"petal_length\": 1.5,\n      \"petal_width\": 0.1\n    },\n    {\n      \"sepal_length\": 7.2,\n      \"sepal_width\": 3.0,\n      \"petal_length\": 5.8,\n      \"petal_width\": 1.6\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{express_url}}/api/predict/batch",
+              "host": ["{{express_url}}"],
+              "path": ["api", "predict", "batch"]
+            },
+            "description": "Batch predict 5 data via Express gateway"
+          }
+        },
+        {
+          "name": "Predict - Validasi Error (Field Kosong)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sepal_length\": 5.1,\n  \"sepal_width\": 3.5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{express_url}}/api/predict",
+              "host": ["{{express_url}}"],
+              "path": ["api", "predict"]
+            },
+            "description": "Test validasi → expected: 400 Bad Request karena petal_length dan petal_width kosong"
+          }
+        },
+        {
+          "name": "Predict - Validasi Error (Nilai Negatif)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sepal_length\": -1,\n  \"sepal_width\": 3.5,\n  \"petal_length\": 1.4,\n  \"petal_width\": 0.2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{express_url}}/api/predict",
+              "host": ["{{express_url}}"],
+              "path": ["api", "predict"]
+            },
+            "description": "Test validasi → expected: 400 Bad Request karena nilai negatif"
           }
         }
       ]
